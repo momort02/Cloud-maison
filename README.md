@@ -1,462 +1,250 @@
-```markdown
 # ☁️ Mon Cloud Personnel
 
-Une solution de cloud personnel auto-hébergé avec interface web moderne, développée en Python Flask.
+Solution de **cloud personnel auto-hébergé**, simple et sécurisée, avec **interface web moderne**, développée en **Python (Flask)**.
+
+Idéal pour stocker, prévisualiser et gérer vos fichiers depuis votre propre machine, sans dépendre de services tiers.
+
+---
+
+## 📌 Sommaire
+
+- ✨ Fonctionnalités  
+- 📋 Prérequis  
+- 🐧 Installation Linux / Ubuntu  
+- 🍎 Installation macOS  
+- 🪟 Installation Windows  
+- 🌐 Accès réseau local  
+- 🔧 Configuration  
+- 🔒 Sécurité  
+- 📱 Utilisation  
+- 🐛 Dépannage  
+- 🤝 Contribution  
+- 📄 Licence  
+
+---
 
 ## ✨ Fonctionnalités
 
-- 📤 **Upload de fichiers** - Envoyez vos fichiers facilement
-- 👁️ **Prévisualisation** - Visualisez images, PDF, vidéos, audio et texte directement dans le navigateur
-- 📊 **Statistiques système** - Suivez CPU, RAM, disque, batterie en temps réel
-- 👥 **Multi-utilisateurs** - Gestion des comptes avec interface d'administration
-- 📱 **Design responsive** - Optimisé pour mobile, tablette et ordinateur
-- 🔒 **Sécurisé** - Authentification par mot de passe hashé
+- 📤 **Upload de fichiers** via interface web
+- 👁️ **Prévisualisation intégrée**
+  - Images (JPG, PNG, GIF, WebP)
+  - PDF
+  - Vidéos (MP4, WebM)
+  - Audio (MP3, WAV)
+  - Fichiers texte
+- 📊 **Statistiques système en temps réel**
+  - CPU, RAM, disque
+  - Batterie (si disponible)
+  - Temps de fonctionnement
+- 👥 **Multi-utilisateurs** avec interface d'administration
+- 📱 **Design responsive** (mobile, tablette, PC)
+- 🔒 **Sécurité** avec mots de passe hashés
+
+---
 
 ## 📋 Prérequis
 
-- **Linux/Ubuntu** : Python 3.5+
-- **macOS** : Python 3.6+
-- **Windows** : Python 3.6+
+| Système | Version Python |
+|-------|----------------|
+| Linux / Ubuntu | Python 3.5+ |
+| macOS | Python 3.6+ |
+| Windows | Python 3.6+ |
 
 ---
 
-# 🐧 Installation sur Linux/Ubuntu
+## 🐧 Installation Linux / Ubuntu
 
-## 1. Installer les dépendances
+### 1️⃣ Installer les dépendances
 
-```bash
-# Mettre à jour les paquets
-sudo apt-get update
 
-# Installer Python et pip
-sudo apt-get install python3 python3-pip
+sudo apt update
+sudo apt install python3 python3-pip python3-flask python3-psutil
 
-# Installer Flask et psutil
-sudo apt-get install python3-flask python3-psutil
-```
+2️⃣ Créer la structure du projet
 
-## 2. Créer la structure du projet
-
-```bash
-# Créer le dossier du projet
-mkdir -p ~/mon-cloud
+mkdir -p ~/mon-cloud/{templates,uploads}
 cd ~/mon-cloud
 
-# Créer les dossiers nécessaires
-mkdir templates uploads
-```
+3️⃣ Créer les fichiers
 
-## 3. Créer les fichiers
+app.py
+templates/login.html
+templates/index.html
+templates/preview.html
+templates/stats.html
+templates/users.html
 
-Créez les fichiers suivants :
-- `app.py` - Application principale
-- `templates/login.html` - Page de connexion
-- `templates/index.html` - Page d'accueil
-- `templates/preview.html` - Page de prévisualisation
-- `templates/stats.html` - Page des statistiques
-- `templates/users.html` - Gestion des utilisateurs
+4️⃣ Lancer l'application
 
-*(Copiez le contenu depuis les fichiers fournis)*
-
-## 4. Lancer l'application
-
-```bash
 python3 app.py
-```
 
-Accédez à : `http://localhost:5000`
+Accès :
 
-**Identifiants par défaut :**
-- Utilisateur : `admin`
-- Mot de passe : `admin123`
+http://localhost:5000
 
-## 5. Démarrage automatique (Optionnel)
+Identifiants par défaut :
 
-```bash
-# Créer un service systemd
-sudo nano /etc/systemd/system/mon-cloud.service
-```
+Utilisateur : admin
+Mot de passe : admin123
 
-Ajoutez :
-
-```ini
-[Unit]
-Description=Mon Cloud Personnel
-After=network.target
-
-[Service]
-User=VOTRE_NOM_UTILISATEUR
-WorkingDirectory=/home/VOTRE_NOM_UTILISATEUR/mon-cloud
-ExecStart=/usr/bin/python3 /home/VOTRE_NOM_UTILISATEUR/mon-cloud/app.py
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Activez le service :
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable mon-cloud
-sudo systemctl start mon-cloud
-```
 
 ---
 
-# 🍎 Installation sur macOS
+🍎 Installation macOS
 
-## 1. Installer Homebrew (si pas déjà installé)
+1️⃣ Installer Homebrew (si nécessaire)
 
-```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
 
-## 2. Installer Python 3
+2️⃣ Installer Python
 
-```bash
 brew install python3
-```
 
-## 3. Installer les dépendances Python
+3️⃣ Installer les dépendances
 
-```bash
 pip3 install flask werkzeug psutil
-```
 
-## 4. Créer la structure du projet
+4️⃣ Lancer l'application
 
-```bash
-# Créer le dossier
-mkdir -p ~/mon-cloud
-cd ~/mon-cloud
-
-# Créer les sous-dossiers
-mkdir templates uploads
-```
-
-## 5. Créer les fichiers
-
-Créez tous les fichiers nécessaires (app.py et les templates)
-
-## 6. Lancer l'application
-
-```bash
 python3 app.py
-```
 
-Accédez à : `http://localhost:5000`
+Accès :
 
-## 7. Démarrage automatique (Optionnel)
+http://localhost:5000
 
-Créez un LaunchAgent :
-
-```bash
-nano ~/Library/LaunchAgents/com.moncloud.app.plist
-```
-
-Ajoutez :
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>com.moncloud.app</string>
-    <key>ProgramArguments</key>
-    <array>
-        <string>/usr/local/bin/python3</string>
-        <string>/Users/VOTRE_NOM/mon-cloud/app.py</string>
-    </array>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>KeepAlive</key>
-    <true/>
-</dict>
-</plist>
-```
-
-Chargez le service :
-
-```bash
-launchctl load ~/Library/LaunchAgents/com.moncloud.app.plist
-```
 
 ---
 
-# 🪟 Installation sur Windows
+🪟 Installation Windows
 
-## 1. Installer Python
+1️⃣ Installer Python
 
-1. Téléchargez Python depuis [python.org](https://www.python.org/downloads/)
-2. **Important** : Cochez "Add Python to PATH" pendant l'installation
-3. Installez Python
+Télécharger depuis https://www.python.org
+Cocher "Add Python to PATH"
 
-## 2. Installer les dépendances
+2️⃣ Installer les dépendances
 
-Ouvrez **PowerShell** ou **Invite de commandes** :
-
-```powershell
 pip install flask werkzeug psutil
-```
 
-## 3. Créer la structure du projet
+3️⃣ Créer la structure du projet
 
-```powershell
-# Créer le dossier
-mkdir C:\mon-cloud
+mkdir C:\mon-cloud\templates
+mkdir C:\mon-cloud\uploads
 cd C:\mon-cloud
 
-# Créer les sous-dossiers
-mkdir templates
-mkdir uploads
-```
+4️⃣ Créer les fichiers
 
-## 4. Créer les fichiers
+app.py
+templates\login.html
+templates\index.html
+templates\preview.html
+templates\stats.html
+templates\users.html
 
-Utilisez Notepad++ ou Visual Studio Code pour créer :
-- `app.py`
-- `templates\login.html`
-- `templates\index.html`
-- `templates\preview.html`
-- `templates\stats.html`
-- `templates\users.html`
+⚠️ Sauvegardez les fichiers en UTF-8 sans BOM
 
-**⚠️ Important** : Sauvegardez en UTF-8 sans BOM
+5️⃣ Lancer l'application
 
-## 5. Lancer l'application
-
-```powershell
 python app.py
-```
 
-Accédez à : `http://localhost:5000`
-
-## 6. Démarrage automatique (Optionnel)
-
-### Méthode 1 : Créer un raccourci dans le dossier de démarrage
-
-1. Créez un fichier `start-cloud.bat` :
-
-```batch
-@echo off
-cd C:\mon-cloud
-python app.py
-```
-
-2. Appuyez sur `Win+R`, tapez `shell:startup`
-3. Créez un raccourci vers `start-cloud.bat` dans ce dossier
-
-### Méthode 2 : Service Windows (avancé)
-
-Utilisez NSSM (Non-Sucking Service Manager) :
-
-1. Téléchargez [NSSM](https://nssm.cc/download)
-2. Exécutez :
-
-```powershell
-nssm install MonCloud "C:\Python39\python.exe" "C:\mon-cloud\app.py"
-nssm start MonCloud
-```
 
 ---
 
-# 🌐 Accès depuis le réseau local
+🌐 Accès réseau local
 
-## Trouver votre adresse IP
+Trouver votre adresse IP
 
-**Linux/macOS :**
-```bash
-ip addr show  # Linux
-ifconfig      # macOS
-```
+ip addr     # Linux
+ifconfig    # macOS
 
-**Windows :**
-```powershell
-ipconfig
-```
+ipconfig    # Windows
 
-Cherchez une adresse comme `192.168.x.x`
+Accès depuis un autre appareil
 
-## Accéder depuis d'autres appareils
-
-Sur le même réseau WiFi, accédez à :
-```
 http://VOTRE_IP:5000
-```
 
-Exemple : `http://192.168.1.100:5000`
+Exemple :
+
+http://192.168.1.42:5000
+
 
 ---
 
 # 🔧 Configuration
 
-## Changer le port
+Changer le port
 
-Dans `app.py`, ligne finale :
+app.run(host="0.0.0.0", port=8080, debug=False)
 
-```python
-app.run(host='0.0.0.0', port=8080, debug=True)  # Changez 5000 en 8080
-```
+Ajouter des utilisateurs
 
-## Ajouter des utilisateurs
-
-**Méthode 1 : Interface web**
-1. Connectez-vous en tant qu'admin
-2. Allez sur "👥 Utilisateurs"
-3. Ajoutez un nouvel utilisateur
-
-**Méthode 2 : Modifier le code**
-
-Dans `app.py`, modifiez :
-
-```python
 USERS = {
-    'admin': generate_password_hash('admin123'),
-    'marie': generate_password_hash('motdepasse123'),
-    'jean': generate_password_hash('autremotdepasse')
+    "admin": generate_password_hash("admin123"),
+    "user1": generate_password_hash("motdepasse")
 }
-```
 
-## Désactiver le debug (production)
+Modifier la taille maximale des fichiers
 
-```python
-app.run(host='0.0.0.0', port=5000, debug=False)
-```
+app.config["MAX_CONTENT_LENGTH"] = 1024 * 1024 * 1024  # 1 Go
 
-## Modifier la taille max des fichiers
-
-Dans `app.py` :
-
-```python
-app.config['MAX_CONTENT_LENGTH'] = 1000 * 1024 * 1024  # 1GB au lieu de 500MB
-```
 
 ---
 
 # 🔒 Sécurité
 
-## Recommandations
+Recommandations importantes :
 
-1. **Changez la clé secrète** dans `app.py` :
-   ```python
-   app.secret_key = 'VOTRE_CLE_SECRETE_UNIQUE_ET_LONGUE'
-   ```
+- Modifier la clé secrète Flask
+- Changer le mot de passe admin
+- Utiliser HTTPS (Nginx / Apache)
+- Ne pas exposer directement sur Internet
 
-2. **Changez le mot de passe admin** par défaut
-
-3. **Utilisez HTTPS** en production (avec nginx/apache)
-
-4. **Pare-feu** : Autorisez uniquement le port 5000 sur votre réseau local
-
-5. **N'exposez PAS** directement sur Internet sans reverse proxy et HTTPS
 
 ---
 
 # 📱 Utilisation
 
-## Upload de fichiers
+1. Se connecter
+2. Choisir un fichier
+3. Envoyer
+4. Prévisualiser ou télécharger
 
-1. Connectez-vous
-2. Cliquez sur "Choisir un fichier"
-3. Sélectionnez votre fichier
-4. Cliquez sur "Envoyer"
-
-## Prévisualisation
-
-Cliquez sur "👁️ Voir" pour :
-- Images (JPG, PNG, GIF, WebP)
-- PDF
-- Vidéos (MP4, WebM)
-- Audio (MP3, WAV)
-- Fichiers texte
-
-## Téléchargement
-
-Cliquez sur "↓" pour télécharger un fichier
-
-## Statistiques
-
-Accédez à "📊 Stats" pour voir :
-- Utilisation CPU
-- Utilisation RAM
-- Espace disque
-- Espace cloud utilisé
-- État de la batterie
-- Temps de fonctionnement
 
 ---
 
 # 🐛 Dépannage
 
-## "Port already in use"
+## Port déjà utilisé
 
-Le port 5000 est déjà utilisé. Changez le port dans `app.py` ou arrêtez l'autre application.
+Changer le port ou arrêter l'application conflictuelle
 
-## "Module not found: flask"
+## Module introuvable
 
-```bash
-pip3 install flask werkzeug psutil
-```
+pip install flask werkzeug psutil
 
-## "Permission denied" sur Linux
+## Problème de permissions Linux
 
-```bash
-sudo python3 app.py
-# ou changez le port en >1024 (ex: 8080)
-```
-
-## Les fichiers uploadés disparaissent
-
-Vérifiez que le dossier `uploads/` existe et a les bonnes permissions :
-
-```bash
-mkdir -p uploads
 chmod 755 uploads
-```
 
-## Erreur "Invalid syntax" avec Python 3.5
-
-Les f-strings ne sont pas supportées. Utilisez la version fournie qui utilise `.format()` à la place.
 
 ---
 
 # 🤝 Contribution
 
-Les contributions sont les bienvenues ! N'hésitez pas à :
-- Signaler des bugs
-- Proposer des améliorations
-- Ajouter des fonctionnalités
+- Bugs
+- Améliorations
+- Nouvelles fonctionnalités
+
 
 ---
 
 # 📄 Licence
 
-Ce projet est libre d'utilisation pour un usage personnel.
+Projet libre pour un usage personnel et éducatif.
 
----
-
-# 📞 Support
-
-Pour toute question ou problème, créez une issue sur GitHub.
 
 ---
 
 # 🎉 Bon cloud personnel !
 
-Profitez de votre solution de stockage maison ! 
-```
-
-Sauvegardez avec `Ctrl+O`, `Entrée`, `Ctrl+X`.
-
-Ce README complet couvre :
-- ✅ Installation sur Linux/Ubuntu, macOS et Windows
-- ✅ Configuration
-- ✅ Démarrage automatique
-- ✅ Accès réseau
-- ✅ Sécurité
-- ✅ Dépannage
-- ✅ Utilisation
-
-Vous pouvez le personnaliser selon vos besoins ! 📚
+Créez votre propre solution de stockage locale et sécurisée ☁️
