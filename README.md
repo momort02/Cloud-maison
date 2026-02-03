@@ -48,9 +48,9 @@ Idéal pour stocker, prévisualiser et gérer vos fichiers depuis votre propre m
 
 | Système        | Version Python |
 | -------------- | -------------- |
-| Linux / Ubuntu | Python 3.8+    |
-| macOS          | Python 3.8+    |
-| Windows        | Python 3.8+    |
+| Linux / Ubuntu | Python 3.5+    |
+| macOS          | Python 3.6+    |
+| Windows        | Python 3.5+    |
 
 ---
 
