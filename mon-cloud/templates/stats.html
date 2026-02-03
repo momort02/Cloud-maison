@@ -77,6 +77,11 @@
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+        .stat-card.updating {
+            transform: scale(0.98);
+            opacity: 0.7;
         }
         .stat-card h3 {
             font-size: 14px;
@@ -161,6 +166,23 @@
             font-size: 14px;
         }
         
+        .refresh-indicator {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .refresh-indicator.active {
+            opacity: 1;
+        }
+        
         @media (max-width: 768px) {
             .menu-toggle {
                 display: block;
@@ -208,6 +230,8 @@
     </style>
 </head>
 <body>
+    <div class="refresh-indicator" id="refreshIndicator">🔄 Mise à jour...</div>
+    
     <div class="header">
         <div class="header-content">
             <h1>📊 Statistiques Système</h1>
@@ -220,7 +244,7 @@
         </div>
     </div>
     
-    <div class="container">
+    <div class="container" id="statsContainer">
         <div class="stats-grid">
             <!-- CPU -->
             <div class="stat-card">
@@ -346,10 +370,41 @@
             }
         });
         
-        // Rafraîchir la page toutes les 5 secondes
-        setTimeout(function() {
-            location.reload();
-        }, 5000);
+        // Fonction pour rafraîchir les statistiques
+        async function refreshStats() {
+            const indicator = document.getElementById('refreshIndicator');
+            const container = document.getElementById('statsContainer');
+            
+            try {
+
+                
+                // Récupérer les nouvelles données
+                const response = await fetch(window.location.href);
+                const html = await response.text();
+                
+                // Créer un élément temporaire pour parser le HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newContainer = doc.getElementById('statsContainer');
+                
+                // Remplacer le contenu
+                if (newContainer) {
+                    container.innerHTML = newContainer.innerHTML;
+                }
+                
+                // Masquer l'indicateur après un court délai
+                setTimeout(() => {
+                    indicator.classList.remove('active');
+                }, 500);
+                
+            } catch (error) {
+                console.error('Erreur lors du rafraîchissement:', error);
+                indicator.classList.remove('active');
+            }
+        }
+        
+        // Rafraîchir toutes les 5 secondes
+        setInterval(refreshStats, 2000);
     </script>
 </body>
 </html>

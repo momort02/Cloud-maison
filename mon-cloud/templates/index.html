@@ -54,6 +54,51 @@
             padding: 20px;
         }
         
+        .breadcrumb {
+            background: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        .breadcrumb span {
+            color: #999;
+        }
+        
+        .actions-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .btn-action-bar {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-action-bar:hover {
+            background: #667eea;
+            color: white;
+        }
+        
         .upload-box {
             background: white;
             padding: 20px;
@@ -172,6 +217,13 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+        .file-name a {
+            color: #333;
+            text-decoration: none;
+        }
+        .file-name a:hover {
+            color: #667eea;
+        }
         .file-meta {
             font-size: 12px;
             color: #999;
@@ -190,6 +242,8 @@
             transition: all 0.2s;
             white-space: nowrap;
         }
+        .btn-folder { background: #FFA726; color: white; }
+        .btn-folder:hover { background: #FB8C00; }
         .btn-preview { background: #667eea; color: white; }
         .btn-preview:hover { background: #5568d3; }
         .btn-download { background: #2196F3; color: white; }
@@ -205,6 +259,59 @@
         .empty-state .icon {
             font-size: 64px;
             margin-bottom: 20px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .btn-modal {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .btn-modal-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-modal-secondary {
+            background: #ddd;
+            color: #333;
         }
         
         /* Responsive Mobile */
@@ -244,6 +351,11 @@
                 padding: 10px 8px;
                 font-size: 12px;
             }
+            
+            .modal-content {
+                margin: 50% auto;
+                width: 95%;
+            }
         }
         
         /* Très petits écrans */
@@ -263,6 +375,9 @@
         <div class="header-content">
             <h1>☁️ Mon Cloud Personnel</h1>
             <div class="nav-links">
+                {% if username == 'admin' %}
+                <a href="{{ url_for('users') }}">👥 Utilisateurs</a>
+                {% endif %}
                 <a href="{{ url_for('stats') }}">📊 Stats</a>
                 <a href="{{ url_for('logout') }}">🚪 Déconnexion</a>
             </div>
@@ -278,26 +393,60 @@
             {% endif %}
         {% endwith %}
         
+        <!-- Fil d'Ariane -->
+        <div class="breadcrumb">
+            <a href="{{ url_for('index') }}">🏠 Accueil</a>
+            {% for item in breadcrumb %}
+                <span>›</span>
+                <a href="{{ url_for('index', folder_path=item.path) }}">📁 {{ item.name }}</a>
+            {% endfor %}
+        </div>
+        
+        <!-- Actions -->
+        <div class="actions-bar">
+            <button class="btn-action-bar" onclick="openFolderModal()">📁 Nouveau dossier</button>
+        </div>
+        
+        <!-- Upload -->
         <div class="upload-box">
-            <h2>📤 Uploader un fichier</h2>
+            <h2>📤 Uploader des fichiers</h2>
             <form method="POST" action="{{ url_for('upload') }}" enctype="multipart/form-data" class="upload-form">
+                <input type="hidden" name="current_folder" value="{{ current_folder }}">
                 <div class="file-input-wrapper">
                     <label for="file-upload" class="file-input-label" id="file-label">
-                        Cliquez pour choisir un fichier
+                        Cliquez pour choisir des fichiers
                     </label>
-                    <input id="file-upload" type="file" name="file" required>
+                    <input id="file-upload" type="file" name="file" multiple required>
                 </div>
                 <button type="submit" class="upload-btn">Envoyer</button>
             </form>
         </div>
         
+        <!-- Liste des fichiers -->
         <div class="files-header">
-            <span>📁 Mes fichiers</span>
-            <span class="files-count">{{ files|length }}</span>
+            <span>📁 Contenu</span>
+            <span class="files-count">{{ folders|length + files|length }}</span>
         </div>
         
         <div class="files-list">
-            {% if files %}
+            {% if folders or files %}
+                <!-- Dossiers -->
+                {% for folder in folders %}
+                <div class="file-item">
+                    <div class="file-info">
+                        <div class="file-name">
+                            <a href="{{ url_for('index', folder_path=folder.path) }}">📁 {{ folder.name }}</a>
+                        </div>
+                        <div class="file-meta">Dossier</div>
+                    </div>
+                    <div class="file-actions">
+                        <a href="{{ url_for('index', folder_path=folder.path) }}" class="btn-action btn-folder">Ouvrir</a>
+                        <a href="{{ url_for('delete_folder', folder_path=folder.path) }}" class="btn-action btn-delete" onclick="return confirm('Supprimer ce dossier et tout son contenu ?')">🗑️</a>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                <!-- Fichiers -->
                 {% for file in files %}
                 <div class="file-item">
                     <div class="file-info">
@@ -306,34 +455,84 @@
                     </div>
                     <div class="file-actions">
                         {% if file.can_preview %}
-                        <a href="{{ url_for('preview', filename=file.name) }}" class="btn-action btn-preview">👁️ Voir</a>
+                        {% if file.path %}
+                        <a href="{{ url_for('preview', filepath=file.path + '/' + file.name) }}" class="btn-action btn-preview">👁️ Voir</a>
+                        {% else %}
+                        <a href="{{ url_for('preview', filepath=file.name) }}" class="btn-action btn-preview">👁️ Voir</a>
                         {% endif %}
-                        <a href="{{ url_for('download', filename=file.name) }}" class="btn-action btn-download">↓</a>
-                        <a href="{{ url_for('delete', filename=file.name) }}" class="btn-action btn-delete" onclick="return confirm('Supprimer ce fichier ?')">🗑️</a>
+                        {% endif %}
+                        {% if file.path %}
+                        <a href="{{ url_for('download', filepath=file.path + '/' + file.name) }}" class="btn-action btn-download">↓</a>
+                        <a href="{{ url_for('delete', filepath=file.path + '/' + file.name) }}" class="btn-action btn-delete" onclick="return confirm('Supprimer ce fichier ?')">🗑️</a>
+                        {% else %}
+                        <a href="{{ url_for('download', filepath=file.name) }}" class="btn-action btn-download">↓</a>
+                        <a href="{{ url_for('delete', filepath=file.name) }}" class="btn-action btn-delete" onclick="return confirm('Supprimer ce fichier ?')">🗑️</a>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
             {% else %}
                 <div class="empty-state">
                     <div class="icon">📂</div>
-                    <p>Aucun fichier pour le moment</p>
-                    <p style="font-size: 14px; margin-top: 10px;">Commencez par uploader votre premier fichier</p>
+                    <p>Ce dossier est vide</p>
+                    <p style="font-size: 14px; margin-top: 10px;">Créez un dossier ou uploadez des fichiers</p>
                 </div>
             {% endif %}
         </div>
     </div>
     
+    <!-- Modal Nouveau Dossier -->
+    <div id="folderModal" class="modal">
+        <div class="modal-content">
+            <h2>📁 Créer un nouveau dossier</h2>
+            <form method="POST" action="{{ url_for('create_folder') }}">
+                <input type="hidden" name="current_folder" value="{{ current_folder }}">
+                <input type="text" name="folder_name" placeholder="Nom du dossier" required autofocus>
+                <div class="modal-buttons">
+                    <button type="button" class="btn-modal btn-modal-secondary" onclick="closeFolderModal()">Annuler</button>
+                    <button type="submit" class="btn-modal btn-modal-primary">Créer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
     <script>
-        document.getElementById('file-upload').addEventListener('change', function(e) {
-            const label = document.getElementById('file-label');
-            if(this.files[0]) {
-                const fileName = this.files[0].name;
-                const fileSize = (this.files[0].size / 1024 / 1024).toFixed(2);
-                label.innerHTML = '✓ ' + fileName + '<br><small style="font-size: 12px; color: #666;">' + fileSize + ' MB</small>';
+        const fileInput = document.getElementById('file-upload');
+        const label = document.getElementById('file-label');
+        
+        fileInput.addEventListener('change', function(e) {
+            if(this.files.length > 0) {
+                if(this.files.length === 1) {
+                    const fileName = this.files[0].name;
+                    const fileSize = (this.files[0].size / 1024 / 1024).toFixed(2);
+                    label.innerHTML = '✓ ' + fileName + '<br><small style="font-size: 12px; color: #666;">' + fileSize + ' MB</small>';
+                } else {
+                    var totalSize = 0;
+                    for(var i = 0; i < this.files.length; i++) {
+                        totalSize += this.files[i].size;
+                    }
+                    const totalSizeMB = (totalSize / 1024 / 1024).toFixed(2);
+                    label.innerHTML = '✓ ' + this.files.length + ' fichiers sélectionnés<br><small style="font-size: 12px; color: #666;">' + totalSizeMB + ' MB au total</small>';
+                }
                 label.style.background = '#e8f5e9';
                 label.style.borderColor = '#4CAF50';
             }
         });
+        
+        function openFolderModal() {
+            document.getElementById('folderModal').style.display = 'block';
+        }
+        
+        function closeFolderModal() {
+            document.getElementById('folderModal').style.display = 'none';
+        }
+        
+        window.onclick = function(event) {
+            const modal = document.getElementById('folderModal');
+            if (event.target == modal) {
+                closeFolderModal();
+            }
+        }
     </script>
 </body>
 </html>

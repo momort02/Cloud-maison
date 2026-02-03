@@ -54,28 +54,54 @@ def can_preview(filename):
     return ext in preview_exts
 
 @app.route('/')
-def index():
+@app.route('/folder/<path:folder_path>')
+def index(folder_path=''):
     if 'username' not in session:
         return redirect(url_for('login'))
     
     files = []
-    upload_path = app.config['UPLOAD_FOLDER']
+    folders = []
+    current_path = os.path.join(app.config['UPLOAD_FOLDER'], folder_path)
     
-    if os.path.exists(upload_path):
-        for filename in os.listdir(upload_path):
-            filepath = os.path.join(upload_path, filename)
-            if os.path.isfile(filepath):
-                files.append({
-                    'name': filename,
-                    'size': get_file_size(filepath),
-                    'date': datetime.fromtimestamp(os.path.getmtime(filepath)).strftime('%d/%m/%Y %H:%M'),
-                    'icon': get_file_icon(filename),
-                    'can_preview': can_preview(filename)
-                })
+    if not os.path.exists(current_path):
+        os.makedirs(current_path)
     
+    for item in os.listdir(current_path):
+        item_path = os.path.join(current_path, item)
+        
+        if os.path.isdir(item_path):
+            folders.append({
+                'name': item,
+                'path': os.path.join(folder_path, item) if folder_path else item
+            })
+        elif os.path.isfile(item_path):
+            files.append({
+                'name': item,
+                'size': get_file_size(item_path),
+                'date': datetime.fromtimestamp(os.path.getmtime(item_path)).strftime('%d/%m/%Y %H:%M'),
+                'icon': get_file_icon(item),
+                'can_preview': can_preview(item),
+                'path': folder_path
+            })
+    
+    folders.sort(key=lambda x: x['name'])
     files.sort(key=lambda x: x['date'], reverse=True)
     
-    return render_template('index.html', files=files, username=session['username'])
+    breadcrumb = []
+    if folder_path:
+        parts = folder_path.split('/')
+        path = ''
+        for part in parts:
+            path = os.path.join(path, part) if path else part
+            breadcrumb.append({'name': part, 'path': path})
+    
+    return render_template('index.html', 
+        files=files, 
+        folders=folders,
+        current_folder=folder_path,
+        breadcrumb=breadcrumb,
+        username=session['username']
+    )
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -105,81 +131,90 @@ def upload():
         flash('Aucun fichier selectionne')
         return redirect(url_for('index'))
     
-    file = request.files['file']
+    files = request.files.getlist('file')
+    current_folder = request.form.get('current_folder', '')
     
-    if file.filename == '':
+    if not files or files[0].filename == '':
         flash('Aucun fichier selectionne')
-        return redirect(url_for('index'))
+        return redirect(url_for('index', folder_path=current_folder))
     
-    if file:
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        flash('Fichier uploade avec succes')
+    upload_path = os.path.join(app.config['UPLOAD_FOLDER'], current_folder)
+    if not os.path.exists(upload_path):
+        os.makedirs(upload_path)
     
-    return redirect(url_for('index'))
+    uploaded_count = 0
+    for file in files:
+        if file and file.filename != '':
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(upload_path, filename))
+            uploaded_count = uploaded_count + 1
+    
+    if uploaded_count == 1:
+        flash('1 fichier uploade avec succes')
+    else:
+        flash(str(uploaded_count) + ' fichiers uploades avec succes')
+    
+    return redirect(url_for('index', folder_path=current_folder))
 
-@app.route('/view/<filename>')
-def view(filename):
+@app.route('/view/<path:filepath>')
+def view(filepath):
     if 'username' not in session:
         return redirect(url_for('login'))
     
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filepath)
 
-@app.route('/download/<filename>')
-def download(filename):
+@app.route('/download/<path:filepath>')
+def download(filepath):
     if 'username' not in session:
         return redirect(url_for('login'))
     
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filepath, as_attachment=True)
 
-@app.route('/preview/<filename>')
-def preview(filename):
+@app.route('/preview/<path:filepath>')
+def preview(filepath):
     if 'username' not in session:
         return redirect(url_for('login'))
     
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    filename = os.path.basename(filepath)
     if '.' in filename:
         ext = filename.split('.')[-1].lower()
     else:
         ext = ''
     
-    return render_template('preview.html', filename=filename, extension=ext)
+    return render_template('preview.html', filename=filename, filepath=filepath, extension=ext)
 
-@app.route('/delete/<filename>')
-def delete(filename):
+@app.route('/delete/<path:filepath>')
+def delete(filepath):
     if 'username' not in session:
         return redirect(url_for('login'))
     
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    if os.path.exists(filepath):
-        os.remove(filepath)
+    full_path = os.path.join(app.config['UPLOAD_FOLDER'], filepath)
+    if os.path.exists(full_path):
+        os.remove(full_path)
         flash('Fichier supprime')
     
-    return redirect(url_for('index'))
+    folder_path = os.path.dirname(filepath)
+    return redirect(url_for('index', folder_path=folder_path))
 
 @app.route('/stats')
 def stats():
     if 'username' not in session:
         return redirect(url_for('login'))
     
-    # CPU
     cpu_percent = psutil.cpu_percent(interval=1)
     cpu_count = psutil.cpu_count()
     
-    # RAM
     memory = psutil.virtual_memory()
     memory_total = memory.total / (1024**3)
     memory_used = memory.used / (1024**3)
     memory_percent = memory.percent
     
-    # Disque
     disk = psutil.disk_usage('/')
     disk_total = disk.total / (1024**3)
     disk_used = disk.used / (1024**3)
     disk_free = disk.free / (1024**3)
     disk_percent = disk.percent
     
-    # Espace uploads
     upload_size = 0
     upload_count = 0
     if os.path.exists(app.config['UPLOAD_FOLDER']):
@@ -190,7 +225,6 @@ def stats():
                 upload_count = upload_count + 1
     upload_size_gb = upload_size / (1024**3)
     
-    # Batterie (avec gestion d'erreur pour anciennes versions de psutil)
     battery_info = None
     try:
         if hasattr(psutil, 'sensors_battery'):
@@ -204,13 +238,11 @@ def stats():
     except Exception:
         pass
     
-    # Uptime
     boot_time = psutil.boot_time()
     uptime_seconds = time.time() - boot_time
     uptime_hours = int(uptime_seconds // 3600)
     uptime_minutes = int((uptime_seconds % 3600) // 60)
     
-    # Info système
     system_info = {
         'os': platform.system(),
         'os_version': platform.release(),
@@ -236,6 +268,81 @@ def stats():
         system_info=system_info,
         username=session['username']
     )
+
+@app.route('/create_folder', methods=['POST'])
+def create_folder():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    
+    folder_name = request.form.get('folder_name', '').strip()
+    current_folder = request.form.get('current_folder', '')
+    
+    if not folder_name:
+        flash('Nom de dossier requis')
+        return redirect(url_for('index', folder_path=current_folder))
+    
+    folder_name = secure_filename(folder_name)
+    new_folder_path = os.path.join(app.config['UPLOAD_FOLDER'], current_folder, folder_name)
+    
+    if os.path.exists(new_folder_path):
+        flash('Ce dossier existe deja')
+    else:
+        os.makedirs(new_folder_path)
+        flash('Dossier ' + folder_name + ' cree avec succes')
+    
+    return redirect(url_for('index', folder_path=current_folder))
+
+@app.route('/delete_folder/<path:folder_path>')
+def delete_folder(folder_path):
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    
+    folder_full_path = os.path.join(app.config['UPLOAD_FOLDER'], folder_path)
+    
+    if os.path.exists(folder_full_path) and os.path.isdir(folder_full_path):
+        import shutil
+        shutil.rmtree(folder_full_path)
+        flash('Dossier supprime')
+    
+    parent_folder = os.path.dirname(folder_path)
+    return redirect(url_for('index', folder_path=parent_folder))
+
+@app.route('/users', methods=['GET', 'POST'])
+def users():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    
+    if session['username'] != 'admin':
+        flash('Acces refuse. Reserve a l\'administrateur.')
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        new_user = request.form['username']
+        new_pass = request.form['password']
+        
+        if new_user and new_pass:
+            if new_user in USERS:
+                flash('Cet utilisateur existe deja')
+            else:
+                USERS[new_user] = generate_password_hash(new_pass)
+                flash('Utilisateur ' + new_user + ' ajoute avec succes')
+        else:
+            flash('Nom d\'utilisateur et mot de passe requis')
+    
+    return render_template('users.html', users=list(USERS.keys()), username=session['username'])
+
+@app.route('/delete_user/<username>')
+def delete_user(username):
+    if 'username' not in session or session['username'] != 'admin':
+        return redirect(url_for('login'))
+    
+    if username == 'admin':
+        flash('Impossible de supprimer l\'administrateur')
+    elif username in USERS:
+        del USERS[username]
+        flash('Utilisateur ' + username + ' supprime')
+    
+    return redirect(url_for('users'))
 
 if __name__ == '__main__':
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
